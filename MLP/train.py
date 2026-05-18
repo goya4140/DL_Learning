@@ -18,6 +18,7 @@ import torch.optim as optim
 from config import config
 from model import MLP, count_parameters
 from dataset import get_mnist_loaders, show_dataset_info
+from utils import ExperimentLogger
 
 
 def get_device(preference: str = "auto") -> torch.device:
@@ -130,6 +131,8 @@ def main():
     os.makedirs(os.path.dirname(config.save_path), exist_ok=True)
 
     best_acc = 0.0
+    logger = ExperimentLogger(log_dir="./logs", lr_step_size=config.lr_step_size)
+
     print("=" * 60)
     print("开始训练")
     print("=" * 60)
@@ -144,6 +147,9 @@ def main():
         print(f"  训练损失: {train_loss:.4f}  训练准确率: {train_acc:.2f}%")
         print(f"  测试损失: {val_loss:.4f}  测试准确率: {val_acc:.2f}%")
 
+        # 记录本轮指标
+        logger.log(epoch, train_loss, train_acc, val_loss, val_acc, current_lr)
+
         # 保存最优模型
         if val_acc > best_acc:
             best_acc = val_acc
@@ -153,6 +159,11 @@ def main():
         scheduler.step()
 
     print(f"\n训练完成！最优测试准确率: {best_acc:.2f}%")
+
+    # 保存实验日志和训练曲线
+    print()
+    logger.save()
+    logger.plot()
 
 
 if __name__ == "__main__":
