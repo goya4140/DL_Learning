@@ -1,0 +1,101 @@
+"""
+实验日志工具（与 MLP/CNN/RNN/LSTM 保持一致）
+
+训练结束后：
+  1. 导出 CSV：logs/metrics.csv
+  2. 生成训练曲线图：logs/training_curves.png
+"""
+
+import os
+import csv
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+
+def _setup_cjk_font():
+    cjk_fonts = ["PingFang SC", "Heiti SC", "STHeiti", "SimHei", "Microsoft YaHei", "WenQuanYi Micro Hei"]
+    from matplotlib import font_manager
+    available = {f.name for f in font_manager.fontManager.ttflist}
+    for font in cjk_fonts:
+        if font in available:
+            matplotlib.rcParams["font.sans-serif"] = [font] + matplotlib.rcParams["font.sans-serif"]
+            matplotlib.rcParams["axes.unicode_minus"] = False
+            return True
+    return False
+
+
+_HAS_CJK = _setup_cjk_font()
+
+
+class ExperimentLogger:
+    def __init__(self, log_dir: str = "./logs", lr_step_size: int = None):
+        self.log_dir = log_dir
+        os.makedirs(log_dir, exist_ok=True)
+        self.records: list[dict] = []
+
+    def log(self, epoch: int, train_loss: float, train_acc: float,
+            val_loss: float, val_acc: float, lr: float = 0.0):
+        self.records.append({
+            "epoch":      epoch,
+            "train_loss": round(train_loss, 6),
+            "train_acc":  round(train_acc,  4),
+            "val_loss":   round(val_loss,   6),
+            "val_acc":    round(val_acc,    4),
+            "lr":         lr,
+        })
+
+    def save(self):
+        if not self.records:
+            return
+        csv_path = os.path.join(self.log_dir, "metrics.csv")
+        fieldnames = ["epoch", "train_loss", "train_acc", "val_loss", "val_acc", "lr"]
+        with open(csv_path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(self.records)
+        print(f"训练日志已保存至: {csv_path}")
+
+    def plot(self):
+        if not self.records:
+            return
+
+        epochs     = [r["epoch"]      for r in self.records]
+        train_loss = [r["train_loss"] for r in self.records]
+        val_loss   = [r["val_loss"]   for r in self.records]
+        train_acc  = [r["train_acc"]  for r in self.records]
+        val_acc    = [r["val_acc"]    for r in self.records]
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
+        title = "GCN 训练曲线（Cora）" if _HAS_CJK else "GCN Training Curves (Cora)"
+        fig.suptitle(title, fontsize=14, fontweight="bold")
+
+        ax1.plot(epochs, train_loss, "b-", linewidth=1.2, label="Train Loss" if not _HAS_CJK else "训练损失")
+        ax1.plot(epochs, val_loss,   "r-", linewidth=1.2, label="Val Loss"   if not _HAS_CJK else "验证损失")
+        ax1.set_xlabel("Epoch")
+        ax1.set_ylabel("Loss")
+        ax1.set_title("Loss Curve" if not _HAS_CJK else "损失曲线")
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+
+        ax2.plot(epochs, train_acc, "b-", linewidth=1.2, label="Train Acc" if not _HAS_CJK else "训练准确率")
+        ax2.plot(epochs, val_acc,   "r-", linewidth=1.2, label="Val Acc"   if not _HAS_CJK else "验证准确率")
+        ax2.set_xlabel("Epoch")
+        ax2.set_ylabel("Accuracy (%)")
+        ax2.set_title("Accuracy Curve" if not _HAS_CJK else "准确率曲线")
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+
+        best_val_acc = max(val_acc)
+        best_epoch   = epochs[val_acc.index(best_val_acc)]
+        ax2.annotate(f"Best: {best_val_acc:.2f}%",
+                     xy=(best_epoch, best_val_acc),
+                     xytext=(best_epoch + 5, best_val_acc - 1.5),
+                     arrowprops=dict(arrowstyle="->", color="red"),
+                     color="red", fontsize=9)
+
+        plt.tight_layout()
+        plot_path = os.path.join(self.log_dir, "training_curves.png")
+        plt.savefig(plot_path, dpi=130)
+        plt.close()
+        print(f"训练曲线已保存至: {plot_path}")

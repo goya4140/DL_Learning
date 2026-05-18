@@ -21,6 +21,7 @@
 | 数据增强（Data Augmentation） | 正则化 | 训练数据不足导致过拟合 | CNN | [regularization/data_augmentation.md](regularization/data_augmentation.md) |
 | Gradient Clipping（梯度裁剪） | 正则化 | RNN 训练中的梯度爆炸 | RNN | [regularization/gradient_clipping.md](regularization/gradient_clipping.md) |
 | LSTM 门控机制 | RNN/LSTM | 梯度消失（长序列依赖无法学习） | LSTM | [rnn_lstm/gating_mechanism.md](rnn_lstm/gating_mechanism.md) |
+| 消息传递（MPNN） | 图神经网络 | 图结构数据无法用标准 CNN/RNN 处理 | GCN | [graph_nn/message_passing.md](graph_nn/message_passing.md) |
 
 ---
 
@@ -43,8 +44,10 @@ DL_Basics/
 ├── cnn_operations/
 │   ├── convolution.md               # 2D 卷积原理、感受野、参数量分析
 │   └── pooling.md                   # MaxPool、AvgPool、Global Average Pooling
-└── rnn_lstm/
-    └── gating_mechanism.md          # LSTM/GRU 门控原理、梯度分析、与 Attention 的关系
+├── rnn_lstm/
+│   └── gating_mechanism.md          # LSTM/GRU 门控原理、梯度分析、与 Attention 的关系
+└── graph_nn/
+    └── message_passing.md           # MPNN 框架、GCN/GAT/GraphSAGE 对比、过平滑问题
 ```
 
 ---
@@ -60,6 +63,7 @@ DL_Basics/
 | Data Augmentation（数据增强） | CNN | ✅ 已完成 |
 | Gradient Clipping（梯度裁剪） | RNN/LSTM | ✅ 已完成 |
 | LSTM 门控机制 / GRU | LSTM | ✅ 已完成 |
+| 消息传递框架（MPNN）/ 过平滑 | GCN | ✅ 已完成 |
 | Layer Normalization | Transformer | 待更新 |
 | Weight Initialization（权重初始化） | CNN/ResNet | 待更新 |
 | Residual Connection（残差连接） | ResNet/Transformer | 待更新 |
