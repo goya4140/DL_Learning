@@ -1,0 +1,28 @@
+# ============================================================
+# DL_Learning 共享虚拟环境依赖
+# Python 3.10 ~ 3.12
+#
+# 安装说明：
+#   macOS / Windows CPU:
+#     pip install -r requirements.txt
+#
+#   Windows NVIDIA GPU（CUDA 12.1）：
+#     pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu121
+#     pip install torchtext==0.18.0 "matplotlib>=3.7.0,<4.0" "numpy>=1.24.0,<2.0" portalocker>=2.0.0
+#
+#   Windows NVIDIA GPU（CUDA 11.8）：
+#     pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu118
+#     pip install torchtext==0.18.0 "matplotlib>=3.7.0,<4.0" "numpy>=1.24.0,<2.0" portalocker>=2.0.0
+# ============================================================
+
+# PyTorch 生态（版本严格锁定，三者必须配套）
+torch==2.3.1
+torchvision==0.18.1
+torchtext==0.18.0
+
+# 数据处理与可视化
+numpy>=1.24.0,<2.0
+matplotlib>=3.7.0,<4.0
+
+# torchtext 加载 AG_NEWS 数据集的必要依赖（部分环境未自动安装）
+portalocker>=2.0.0

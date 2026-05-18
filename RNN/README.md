@@ -199,25 +199,67 @@ torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
 
 ## 6. 快速开始
 
-### 环境依赖
+### 版本兼容表
+
+| 库 | 版本 | 说明 |
+|----|------|------|
+| Python | 3.10 ~ 3.12 | torch 2.3.x 官方支持范围，3.9 不支持 |
+| torch | 2.3.1 | MPS 后端稳定，支持 CUDA 11.8 / 12.1 |
+| torchvision | 0.18.1 | 严格对应 torch 2.3.x |
+| torchtext | **0.18.0** | **必须与 torch 严格对应**；AG_NEWS DataPipe API 在 0.17+ 稳定 |
+| matplotlib | >=3.7.0,<4.0 | 训练曲线可视化 |
+| numpy | >=1.24.0,<2.0 | numpy 2.0 与 torch 2.3.x 存在兼容问题 |
+| portalocker | >=2.0.0 | torchtext 加载 AG_NEWS 的必要依赖，需显式安装 |
+
+> **torchtext 版本对应关系（重要）**：torch 2.3.x 必须配套 torchtext 0.18.x。版本不匹配会导致 `ImportError` 或数据集 API 报错。切勿单独升级其中一个。
+
+### 环境验证
+
+安装完成后运行以下命令，确认各库版本正确：
 
 ```bash
-pip install torch torchvision torchtext
+python -c "
+import torch, torchvision, torchtext, matplotlib, numpy
+print(f'torch       : {torch.__version__}')
+print(f'torchvision : {torchvision.__version__}')
+print(f'torchtext   : {torchtext.__version__}')
+print(f'matplotlib  : {matplotlib.__version__}')
+print(f'numpy       : {numpy.__version__}')
+if torch.cuda.is_available():
+    print('加速设备     : CUDA', torch.version.cuda)
+elif torch.backends.mps.is_available():
+    print('加速设备     : MPS (Apple Silicon)')
+else:
+    print('加速设备     : CPU only')
+"
 ```
 
-> torchtext 版本需与 PyTorch 匹配，参考 https://github.com/pytorch/text#installation
-
-### macOS（Apple Silicon，MPS 加速）
+### macOS（Apple Silicon M1/M2/M3/M4，默认）
 
 ```bash
+# 1. 在项目根目录创建共享虚拟环境（MLP/CNN/RNN 三个子项目共用）
+cd DL_Learning
+python3 -m venv .venv
+source .venv/bin/activate
+
+# 2. 安装 PyTorch 生态（版本严格锁定）
+pip install torch==2.3.1 torchvision==0.18.1 torchtext==0.18.0
+
+# 3. 安装其余依赖
+pip install "matplotlib>=3.7.0,<4.0" "numpy>=1.24.0,<2.0" portalocker
+
+# 4. 进入子项目并训练（自动检测 MPS，输出"使用设备: mps"）
 cd RNN
 python train.py
+
+# 5. 首次运行会自动下载 AG News 数据集（~30MB）并构建词汇表缓存
+#    后续运行直接从缓存加载，无需重复下载
+
+# 6. 测试
+python test.py
 ```
 
-首次运行会自动下载 AG News 数据集（~30MB）并构建词汇表缓存。  
-后续运行直接从缓存加载，无需重复下载。
-
-预期输出（M4 Pro）：
+预期终端输出（M4 Pro，约 2 分钟/epoch）：
 
 ```
 使用设备: mps
@@ -232,29 +274,75 @@ python train.py
 训练完成！最优测试准确率: ~91.xx%
 ```
 
-训练结束后运行测试：
+### Windows（NVIDIA GPU，CUDA 12.1）
+
+```powershell
+# 1. 在项目根目录创建共享虚拟环境
+cd DL_Learning
+python -m venv .venv
+.venv\Scripts\activate
+
+# 2. 安装 torch/torchvision（CUDA 12.1 版本）
+pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu121
+
+# 3. 安装 torchtext 及其余依赖（torchtext 从默认 PyPI 安装，无 CUDA 变体）
+pip install torchtext==0.18.0 "matplotlib>=3.7.0,<4.0" "numpy>=1.24.0,<2.0" portalocker
+
+# 4. 训练（自动检测 CUDA，输出"使用设备: cuda"）
+cd RNN
+python train.py
+```
+
+> 若使用 CUDA 11.8，将 `cu121` 替换为 `cu118`。可通过 `nvidia-smi` 查看 CUDA 版本。
+
+### Windows（无 GPU，仅 CPU）
+
+```powershell
+# 1. 在项目根目录创建共享虚拟环境
+cd DL_Learning
+python -m venv .venv
+.venv\Scripts\activate
+
+# 2. 安装所有依赖（CPU 版 torch，无需 --index-url）
+pip install torch==2.3.1 torchvision==0.18.1 torchtext==0.18.0
+pip install "matplotlib>=3.7.0,<4.0" "numpy>=1.24.0,<2.0" portalocker
+
+# 3. 训练（输出"使用设备: cpu"，AG News 约 3-5 分钟/epoch）
+cd RNN
+python train.py
+```
+
+### 使用 requirements.txt 安装（推荐）
 
 ```bash
-python test.py
+# macOS / Windows CPU（激活虚拟环境后）
+pip install -r requirements.txt
+
+# Windows NVIDIA GPU（需先单独安装带 CUDA 的 torch/torchvision）
+pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu121
+pip install torchtext==0.18.0 "matplotlib>=3.7.0,<4.0" "numpy>=1.24.0,<2.0" portalocker
 ```
 
-### Windows（NVIDIA GPU）
+`requirements.txt` 位于项目根目录，覆盖所有子项目的完整依赖。
 
-```bat
-cd RNN
-python train.py
+### 手动指定设备
+
+在 `config.py` 中修改 `device` 字段：
+
+```python
+device = "auto"   # 默认：自动检测（CUDA > MPS > CPU）
+device = "mps"    # 强制使用 Apple Silicon GPU
+device = "cuda"   # 强制使用 NVIDIA GPU
+device = "cpu"    # 强制使用 CPU（调试用）
 ```
 
-代码会自动检测 CUDA 并使用 GPU 加速。
+### 注意事项
 
-### Windows（CPU）
-
-```bat
-cd RNN
-python train.py
-```
-
-CPU 训练约 3-5 分钟/epoch（词汇表较小，AG News 数据量适中）。
+- 虚拟环境建议统一创建在**项目根目录**（`DL_Learning/.venv`），MLP/CNN/RNN 三个子项目共享，避免重复安装和版本冲突。
+- **torchtext 与 torch 必须严格版本匹配**，切勿单独执行 `pip install --upgrade torchtext`。
+- `portalocker` 是 torchtext 加载 AG_NEWS 数据集在 Windows 上的必要依赖，需显式安装，否则会报 `ModuleNotFoundError`。
+- torch 2.3.x 要求 Python 3.10 ~ 3.12，可用 `python --version` 确认。
+- Windows 路径如含中文或空格，建议将项目放在 `C:\Projects\` 下。
 
 ---
 
