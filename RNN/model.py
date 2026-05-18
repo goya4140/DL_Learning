@@ -3,13 +3,18 @@ RNN 情感/文本分类模型
 
 维度变化总览：
   输入 (B, L)
-    → Embedding                       → (B, L, E)
-    → nn.RNN（batch_first=True）      → output (B, L, H), hidden (num_layers, B, H)
-    → 取最后一层最终隐藏状态 hidden[-1]  → (B, H)
+    → Embedding                         → (B, L, E)
+    → nn.RNN（batch_first=True）        → output (B, L, H)
+    → 所有时间步均值池化 output.mean(1)  → (B, H)
     → Dropout
-    → FC: Linear(H, output_size)      → (B, output_size)
+    → FC: Linear(H, output_size)        → (B, output_size)
 
 B = batch_size, L = 序列长度, E = embed_dim, H = hidden_size
+
+【为什么用均值池化而非 hidden[-1]】
+  vanilla RNN 梯度需从最后时间步反传到第一步，路径长度 = L × num_layers。
+  当 L=128、num_layers=2 时，路径达 256 步，梯度以指数级消失，模型无法学习。
+  均值池化让梯度从每个时间步直接流回，平均路径长度为 L/2，显著缓解梯度消失。
 """
 
 import torch
@@ -47,13 +52,13 @@ class RNNClassifier(nn.Module):
         embedded = self.dropout(self.embedding(x))    # (B, L, E)
 
         # output: 所有时间步的隐藏状态 (B, L, H)
-        # hidden: 最后一个时间步的隐藏状态 (num_layers, B, H)
-        _, hidden = self.rnn(embedded)
+        output, _ = self.rnn(embedded)
 
-        # 取最顶层（最后一层）的最终隐藏状态作为序列表示
-        last_hidden = hidden[-1]                      # (B, H)
+        # 均值池化：对所有时间步取平均，梯度从每一步直接流回
+        # 相比 hidden[-1]，大幅缓解长序列下的梯度消失问题
+        pooled = output.mean(dim=1)                   # (B, H)
 
-        return self.fc(self.dropout(last_hidden))     # (B, output_size)
+        return self.fc(self.dropout(pooled))          # (B, output_size)
 
 
 def count_parameters(model: nn.Module) -> int:

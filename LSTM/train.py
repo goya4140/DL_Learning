@@ -1,10 +1,12 @@
 """
 训练脚本
 
-RNN 训练与 MLP/CNN 框架一致，新增一步：
-  4.5. 梯度裁剪（Gradient Clipping）
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.grad_clip)
-       防止 BPTT 过程中梯度爆炸（RNN 特有问题）
+LSTM 训练流程与 RNN 完全一致，包含：
+  1. 构建词汇表 / 加载数据
+  2. 实例化 LSTMClassifier
+  3. 前向传播 → 计算损失 → 反向传播
+  4. 梯度裁剪（防止梯度爆炸，LSTM 已大幅缓解但保留作为安全保障）
+  5. 参数更新
 """
 
 import warnings
@@ -16,7 +18,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from config import config
-from model import RNNClassifier, count_parameters
+from model import LSTMClassifier, count_parameters
 from dataset import build_vocab, get_agnews_loaders, show_dataset_info
 from utils import ExperimentLogger
 
@@ -45,7 +47,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device, epoch):
         optimizer.zero_grad()
         loss.backward()
 
-        # 梯度裁剪：将所有参数梯度的 L2 范数限制在 grad_clip 以内
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.grad_clip)
 
         optimizer.step()
@@ -90,7 +91,6 @@ def main():
 
     pin_memory = device.type == "cuda"
 
-    # 构建词汇表（首次运行会下载数据集，之后从缓存加载）
     vocab = build_vocab(config.data_dir, config.vocab_size)
     print(f"词汇表大小: {len(vocab)}")
     pad_idx = vocab["<pad>"]
@@ -103,7 +103,7 @@ def main():
     show_dataset_info(train_loader, test_loader)
     print()
 
-    model = RNNClassifier(
+    model = LSTMClassifier(
         vocab_size=len(vocab),
         embed_dim=config.embed_dim,
         hidden_size=config.hidden_size,
@@ -111,8 +111,11 @@ def main():
         num_layers=config.num_layers,
         dropout_rate=config.dropout_rate,
         pad_idx=pad_idx,
+        bidirectional=config.bidirectional,
     ).to(device)
-    print(f"模型参数总量: {count_parameters(model):,}")
+
+    direction = "双向" if config.bidirectional else "单向"
+    print(f"模型参数总量: {count_parameters(model):,}  ({direction} LSTM, {config.num_layers} 层)")
     print(model)
     print()
 
