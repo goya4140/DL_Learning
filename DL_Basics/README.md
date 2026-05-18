@@ -20,6 +20,7 @@
 | 池化（MaxPool/AvgPool/GAP） | CNN 基础 | 特征图尺寸过大、对位置过敏感 | CNN | [cnn_operations/pooling.md](cnn_operations/pooling.md) |
 | 数据增强（Data Augmentation） | 正则化 | 训练数据不足导致过拟合 | CNN | [regularization/data_augmentation.md](regularization/data_augmentation.md) |
 | Gradient Clipping（梯度裁剪） | 正则化 | RNN 训练中的梯度爆炸 | RNN | [regularization/gradient_clipping.md](regularization/gradient_clipping.md) |
+| LSTM 门控机制 | RNN/LSTM | 梯度消失（长序列依赖无法学习） | LSTM | [rnn_lstm/gating_mechanism.md](rnn_lstm/gating_mechanism.md) |
 
 ---
 
@@ -39,9 +40,11 @@ DL_Basics/
 │   └── gradient_clipping.md         # 梯度裁剪（clip_grad_norm_）
 ├── lr_schedule/
 │   └── lr_schedule.md               # 学习率调度策略
-└── cnn_operations/
-    ├── convolution.md               # 2D 卷积原理、感受野、参数量分析
-    └── pooling.md                   # MaxPool、AvgPool、Global Average Pooling
+├── cnn_operations/
+│   ├── convolution.md               # 2D 卷积原理、感受野、参数量分析
+│   └── pooling.md                   # MaxPool、AvgPool、Global Average Pooling
+└── rnn_lstm/
+    └── gating_mechanism.md          # LSTM/GRU 门控原理、梯度分析、与 Attention 的关系
 ```
 
 ---
@@ -55,8 +58,9 @@ DL_Basics/
 | 2D 卷积 / 感受野 | CNN | ✅ 已完成 |
 | MaxPool / GAP 池化 | CNN | ✅ 已完成 |
 | Data Augmentation（数据增强） | CNN | ✅ 已完成 |
-| Layer Normalization | Transformer | 待更新 |
 | Gradient Clipping（梯度裁剪） | RNN/LSTM | ✅ 已完成 |
+| LSTM 门控机制 / GRU | LSTM | ✅ 已完成 |
+| Layer Normalization | Transformer | 待更新 |
 | Weight Initialization（权重初始化） | CNN/ResNet | 待更新 |
 | Residual Connection（残差连接） | ResNet/Transformer | 待更新 |
 | Attention Mechanism | Transformer | 待更新 |
