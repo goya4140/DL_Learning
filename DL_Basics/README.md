@@ -16,6 +16,9 @@
 | Dropout | 正则化 | 过拟合（训练好测试差） | MLP | [regularization/dropout.md](regularization/dropout.md) |
 | L2 正则化（Weight Decay） | 正则化 | 过拟合、权重无限增大 | MLP | [regularization/weight_decay.md](regularization/weight_decay.md) |
 | StepLR / 学习率调度 | 学习率 | 固定学习率难以兼顾收敛速度和精度 | MLP | [lr_schedule/lr_schedule.md](lr_schedule/lr_schedule.md) |
+| 2D 卷积（Conv2d） | CNN 基础 | FC 层忽略空间结构、参数爆炸 | CNN | [cnn_operations/convolution.md](cnn_operations/convolution.md) |
+| 池化（MaxPool/AvgPool/GAP） | CNN 基础 | 特征图尺寸过大、对位置过敏感 | CNN | [cnn_operations/pooling.md](cnn_operations/pooling.md) |
+| 数据增强（Data Augmentation） | 正则化 | 训练数据不足导致过拟合 | CNN | [regularization/data_augmentation.md](regularization/data_augmentation.md) |
 
 ---
 
@@ -30,9 +33,13 @@ DL_Basics/
 │   └── batch_norm.md                # BatchNorm、LayerNorm、GroupNorm
 ├── regularization/
 │   ├── dropout.md                   # Dropout 原理与实践
-│   └── weight_decay.md              # L1/L2 正则化
-└── lr_schedule/
-    └── lr_schedule.md               # 学习率调度策略
+│   ├── weight_decay.md              # L1/L2 正则化
+│   └── data_augmentation.md         # 数据增强（RandomCrop/Flip/ColorJitter 等）
+├── lr_schedule/
+│   └── lr_schedule.md               # 学习率调度策略
+└── cnn_operations/
+    ├── convolution.md               # 2D 卷积原理、感受野、参数量分析
+    └── pooling.md                   # MaxPool、AvgPool、Global Average Pooling
 ```
 
 ---
@@ -43,9 +50,11 @@ DL_Basics/
 
 | 预期技巧 | 来源网络 | 状态 |
 |---------|---------|------|
+| 2D 卷积 / 感受野 | CNN | ✅ 已完成 |
+| MaxPool / GAP 池化 | CNN | ✅ 已完成 |
+| Data Augmentation（数据增强） | CNN | ✅ 已完成 |
 | Layer Normalization | Transformer | 待更新 |
 | Gradient Clipping（梯度裁剪） | RNN/LSTM | 待更新 |
-| Weight Initialization（权重初始化） | CNN | 待更新 |
-| Data Augmentation（数据增强） | CNN | 待更新 |
+| Weight Initialization（权重初始化） | CNN/ResNet | 待更新 |
 | Residual Connection（残差连接） | ResNet/Transformer | 待更新 |
 | Attention Mechanism | Transformer | 待更新 |
