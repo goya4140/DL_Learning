@@ -256,54 +256,107 @@ def cross_entropy(logits, target):
 
 ## 4. 快速开始
 
+### 版本兼容表
+
+| 库 | 版本 | 说明 |
+|----|------|------|
+| Python | 3.10 ~ 3.12 | torch 2.3.x 官方支持范围，3.9 不支持 |
+| torch | 2.3.1 | MPS 后端稳定，支持 CUDA 11.8 / 12.1 |
+| torchvision | 0.18.1 | 严格对应 torch 2.3.x |
+| matplotlib | >=3.7.0,<4.0 | 训练曲线可视化 |
+| numpy | >=1.24.0,<2.0 | numpy 2.0 与 torch 2.3.x 存在兼容问题 |
+
+### 环境验证
+
+安装完成后运行以下命令，确认各库版本正确：
+
+```bash
+python -c "
+import torch, torchvision, matplotlib, numpy
+print(f'torch       : {torch.__version__}')
+print(f'torchvision : {torchvision.__version__}')
+print(f'matplotlib  : {matplotlib.__version__}')
+print(f'numpy       : {numpy.__version__}')
+if torch.cuda.is_available():
+    print('加速设备     : CUDA', torch.version.cuda)
+elif torch.backends.mps.is_available():
+    print('加速设备     : MPS (Apple Silicon)')
+else:
+    print('加速设备     : CPU only')
+"
+```
+
 ### macOS（Apple Silicon M1/M2/M3/M4，默认）
 
 ```bash
-# 1. 创建并激活虚拟环境
-python3 -m venv .venv && source .venv/bin/activate
+# 1. 在项目根目录创建共享虚拟环境（MLP/CNN/RNN 三个子项目共用）
+cd DL_Learning
+python3 -m venv .venv
+source .venv/bin/activate
 
-# 2. 安装 PyTorch（官方 pip 包已原生支持 MPS，无需额外操作）
-pip install torch torchvision matplotlib
+# 2. 安装依赖（版本锁定，避免兼容性问题）
+pip install torch==2.3.1 torchvision==0.18.1 "matplotlib>=3.7.0,<4.0" "numpy>=1.24.0,<2.0"
 
-# 3. 训练（自动检测 MPS，输出"使用设备: mps"）
+# 3. 进入子项目并训练（自动检测 MPS，输出"使用设备: mps"）
+cd MLP
 python train.py
 
 # 4. 测试
 python test.py
 ```
 
-> MPS 是 Apple Silicon 的 GPU 加速框架，PyTorch >= 1.12 开始支持，速度比纯 CPU 快 3-5 倍。
+> MPS 是 Apple Silicon 的 GPU 加速框架，torch 2.3.x 对 MPS 的支持已非常成熟，速度比纯 CPU 快 3-5 倍。
 
-### Windows（NVIDIA GPU）
+### Windows（NVIDIA GPU，CUDA 12.1）
 
 ```powershell
-# 1. 创建并激活虚拟环境
+# 1. 在项目根目录创建共享虚拟环境
+cd DL_Learning
 python -m venv .venv
 .venv\Scripts\activate
 
-# 2. 安装 PyTorch（CUDA 12.1，按实际 CUDA 版本选择）
-pip install torch torchvision matplotlib --index-url https://download.pytorch.org/whl/cu121
+# 2. 安装 PyTorch（指定 CUDA 12.1 索引，版本号固定）
+pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu121
+pip install "matplotlib>=3.7.0,<4.0" "numpy>=1.24.0,<2.0"
 
 # 3. 训练（自动检测 CUDA，输出"使用设备: cuda"）
+cd MLP
 python train.py
 
 # 4. 测试
 python test.py
 ```
+
+> 若使用 CUDA 11.8，将 `cu121` 替换为 `cu118`。可通过 `nvidia-smi` 查看 CUDA 版本。
 
 ### Windows（无 GPU，仅 CPU）
 
 ```powershell
-# 1. 创建并激活虚拟环境
+# 1. 在项目根目录创建共享虚拟环境
+cd DL_Learning
 python -m venv .venv
 .venv\Scripts\activate
 
-# 2. 安装 CPU 版 PyTorch
-pip install torch torchvision matplotlib
+# 2. 安装 CPU 版 PyTorch（无需 --index-url）
+pip install torch==2.3.1 torchvision==0.18.1 "matplotlib>=3.7.0,<4.0" "numpy>=1.24.0,<2.0"
 
 # 3. 训练（输出"使用设备: cpu"，速度较慢但功能完整）
+cd MLP
 python train.py
 ```
+
+### 使用 requirements.txt 安装（推荐）
+
+```bash
+# macOS / Windows CPU（激活虚拟环境后）
+pip install -r requirements.txt
+
+# Windows NVIDIA GPU（需先单独安装带 CUDA 的 torch/torchvision）
+pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu121
+pip install "matplotlib>=3.7.0,<4.0" "numpy>=1.24.0,<2.0" portalocker
+```
+
+`requirements.txt` 位于项目根目录，覆盖所有子项目的完整依赖。
 
 ### 手动指定设备
 
@@ -315,6 +368,12 @@ device = "mps"    # 强制使用 Apple Silicon GPU
 device = "cuda"   # 强制使用 NVIDIA GPU
 device = "cpu"    # 强制使用 CPU（调试用）
 ```
+
+### 注意事项
+
+- 虚拟环境建议统一创建在**项目根目录**（`DL_Learning/.venv`），MLP/CNN/RNN 三个子项目共享，避免重复安装和版本冲突。
+- torch 2.3.x 要求 Python 3.10 ~ 3.12，可用 `python --version` 确认。
+- Windows 路径如含中文或空格，建议将项目放在 `C:\Projects\` 下。
 
 ---
 
