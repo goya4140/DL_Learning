@@ -7,6 +7,9 @@ RNN 训练与 MLP/CNN 框架一致，新增一步：
        防止 BPTT 过程中梯度爆炸（RNN 特有问题）
 """
 
+import warnings
+warnings.filterwarnings("ignore", message=".*NotOpenSSLWarning.*")
+
 import os
 import torch
 import torch.nn as nn
