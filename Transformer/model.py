@@ -101,7 +101,9 @@ class TransformerClassifier(nn.Module):
             batch_first=True,
             norm_first=False,   # Post-LN（原始论文），Pre-LN 训练更稳定但改变行为
         )
-        self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_encoder_layers)
+        # enable_nested_tensor=False: disables nested-tensor fast path not supported on MPS
+        self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_encoder_layers,
+                                             enable_nested_tensor=False)
 
         self.dropout = nn.Dropout(dropout_rate)
         self.fc = nn.Linear(d_model, num_classes)
