@@ -377,6 +377,43 @@ GCN/
 
 ## 9. Quick Start
 
+### 第一步：手动下载 Cora 数据集
+
+> Cora 数据集需要手动下载（约 2MB），**只需一次**，之后自动从缓存加载。
+
+**方法一：浏览器下载（推荐）**
+
+1. 用浏览器访问：`https://linqs-data.scu.edu/public/datasets/cora/cora.tgz`
+2. 下载 `cora.tgz`（约 2MB）到本地
+3. 解压并移动到正确位置：
+
+```bash
+# 在 GCN/ 目录下执行（假设下载到 ~/Downloads/）
+mkdir -p data
+tar -xzf ~/Downloads/cora.tgz -C data/
+```
+
+4. 确认目录结构：
+
+```
+GCN/
+└── data/
+    └── cora/
+        ├── cora.content   ← 节点特征和标签（2708 行）
+        └── cora.cites     ← 引用关系边列表（5429 行）
+```
+
+**方法二：终端下载（如网络支持）**
+
+```bash
+cd GCN/data
+curl -O https://linqs-data.scu.edu/public/datasets/cora/cora.tgz
+tar -xzf cora.tgz
+rm cora.tgz
+```
+
+---
+
 ### 版本兼容性
 
 | 包 | 版本 | 说明 |
@@ -393,8 +430,9 @@ GCN/
 ```bash
 source ../.venv/bin/activate   # 复用 MLP/CNN/RNN/LSTM 的虚拟环境
 
+# 先完成上方「手动下载 Cora 数据集」步骤，然后：
 cd GCN
-python train.py   # 首次运行自动下载 Cora（约 2MB）
+python train.py
 python test.py
 ```
 
@@ -403,6 +441,7 @@ python test.py
 ```bash
 ..\.venv\Scripts\activate
 
+# 先将 cora/ 文件夹放置到 GCN\data\cora\，然后：
 cd GCN
 python train.py
 python test.py
