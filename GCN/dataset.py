@@ -17,7 +17,6 @@ Cora 是图神经网络研究中最经典的节点分类基准数据集：
 """
 
 import os
-import ssl
 import csv
 import pickle
 import tarfile
@@ -47,16 +46,30 @@ _CORA_URLS = [
 _CORA_PRIMARY_URL = _CORA_URLS[0]
 
 
-def _urlretrieve_ssl_relaxed(url: str, dest: str):
-    """下载文件，禁用 SSL 证书校验以兼容 Python 3.9 macOS LibreSSL。
+def _urldownload(url: str, dest: str):
+    """健壮下载函数，优先用 requests（SSL 处理优于 urllib），不可用时降级。
 
-    Python 3.9 on macOS 使用 LibreSSL，与部分服务器的 TLS 握手失败（SSLEOFError）。
-    对公开数据集禁用证书校验是可接受的；生产环境中不建议这样做。
+    Python 3.9 macOS LibreSSL 与部分 HTTPS 服务器 TLS 握手不兼容（SSLEOFError），
+    requests 库的 SSL 实现更完善，可绕过该问题。
     """
-    ctx = ssl.create_default_context()
+    try:
+        import requests
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        resp = requests.get(url, verify=False, stream=True, timeout=60)
+        resp.raise_for_status()
+        with open(dest, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=8192):
+                f.write(chunk)
+        return
+    except ImportError:
+        pass
+
+    # fallback：urllib + 宽松 SSL 上下文
+    import ssl
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS)  # noqa: S502
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
-
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, context=ctx) as resp:
         with open(dest, "wb") as f:
@@ -78,8 +91,29 @@ def _download_cora(data_dir: str):
     os.makedirs(data_dir, exist_ok=True)
     tgz_path = os.path.join(data_dir, "cora.tgz")
 
-    print(f"下载 Cora 数据集（约 2MB）: {_CORA_PRIMARY_URL}")
-    _urlretrieve_ssl_relaxed(_CORA_PRIMARY_URL, tgz_path)
+    # 依次尝试：HTTPS → HTTP（HTTP 无 SSL 问题，linqs 服务器支持双协议）
+    urls = [
+        "https://linqs-data.scu.edu/public/datasets/cora/cora.tgz",
+        "http://linqs-data.scu.edu/public/datasets/cora/cora.tgz",
+    ]
+    last_err = None
+    for url in urls:
+        try:
+            print(f"下载 Cora 数据集（约 2MB）: {url}")
+            _urldownload(url, tgz_path)
+            last_err = None
+            break
+        except Exception as e:
+            print(f"  → 失败（{type(e).__name__}: {e}），尝试下一地址...")
+            last_err = e
+
+    if last_err is not None:
+        raise RuntimeError(
+            "Cora 数据集下载失败。请手动下载：\n"
+            "  1. 浏览器访问 http://linqs-data.scu.edu/public/datasets/cora/cora.tgz\n"
+            "  2. 解压后将 cora/ 文件夹放置到 GCN/data/cora/\n"
+            "  3. 确保 GCN/data/cora/cora.content 和 GCN/data/cora/cora.cites 存在"
+        ) from last_err
 
     print("解压数据集...")
     with tarfile.open(tgz_path, "r:gz") as f:
