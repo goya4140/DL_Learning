@@ -13,14 +13,12 @@ Cora 是图神经网络研究中最经典的节点分类基准数据集：
   - 验证：500 个节点
   - 测试：1,000 个节点
 
-首次运行自动从网络下载（约 2MB），之后从本地缓存加载。
+数据集需要手动下载，详见 README.md「数据集准备」一节。
 """
 
 import os
-import csv
 import pickle
 import tarfile
-import urllib.request
 
 import numpy as np
 import torch
@@ -38,88 +36,33 @@ CLASSES = [
 ]
 NUM_CLASSES = 7
 
-# 主 URL + 备用 URL（Python 3.9 macOS LibreSSL 与 linqs 服务器 TLS 握手可能失败）
-_CORA_URLS = [
-    "https://linqs-data.scu.edu/public/datasets/cora/cora.tgz",
-    "https://nrvis.com/download/data/labeled/cora.zip",  # 备用（zip 格式）
-]
-_CORA_PRIMARY_URL = _CORA_URLS[0]
+_MANUAL_DOWNLOAD_MSG = """
+Cora 数据集文件缺失，请手动下载：
+
+  方法一（推荐）：浏览器下载 tgz
+    1. 用浏览器访问：https://linqs-data.scu.edu/public/datasets/cora/cora.tgz
+    2. 下载 cora.tgz（约 2MB）
+    3. 解压：双击 tgz 文件，或在终端运行：
+         tar -xzf cora.tgz -C GCN/data/
+    4. 确认以下两个文件存在：
+         GCN/data/cora/cora.content
+         GCN/data/cora/cora.cites
+
+  方法二：终端一键解压（已下载 tgz 后）
+    cd GCN
+    tar -xzf ~/Downloads/cora.tgz -C data/
+
+准备好后重新运行 python train.py 即可。
+"""
 
 
-def _urldownload(url: str, dest: str):
-    """健壮下载函数，优先用 requests（SSL 处理优于 urllib），不可用时降级。
-
-    Python 3.9 macOS LibreSSL 与部分 HTTPS 服务器 TLS 握手不兼容（SSLEOFError），
-    requests 库的 SSL 实现更完善，可绕过该问题。
-    """
-    try:
-        import requests
-        import urllib3
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        resp = requests.get(url, verify=False, stream=True, timeout=60)
-        resp.raise_for_status()
-        with open(dest, "wb") as f:
-            for chunk in resp.iter_content(chunk_size=8192):
-                f.write(chunk)
-        return
-    except ImportError:
-        pass
-
-    # fallback：urllib + 宽松 SSL 上下文
-    import ssl
-    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS)  # noqa: S502
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, context=ctx) as resp:
-        with open(dest, "wb") as f:
-            f.write(resp.read())
-
-
-# ──────────────────────────────────────────────
-# 下载与解析
-# ──────────────────────────────────────────────
-
-def _download_cora(data_dir: str):
-    """首次运行时下载并解压 Cora 数据集（约 2MB），后续直接读本地文件"""
+def _check_cora_files(data_dir: str):
+    """检查 Cora 原始文件是否存在，不存在则给出手动下载指引"""
     content_path = os.path.join(data_dir, "cora", "cora.content")
     cites_path   = os.path.join(data_dir, "cora", "cora.cites")
 
-    if os.path.exists(content_path) and os.path.exists(cites_path):
-        return content_path, cites_path
-
-    os.makedirs(data_dir, exist_ok=True)
-    tgz_path = os.path.join(data_dir, "cora.tgz")
-
-    # 依次尝试：HTTPS → HTTP（HTTP 无 SSL 问题，linqs 服务器支持双协议）
-    urls = [
-        "https://linqs-data.scu.edu/public/datasets/cora/cora.tgz",
-        "http://linqs-data.scu.edu/public/datasets/cora/cora.tgz",
-    ]
-    last_err = None
-    for url in urls:
-        try:
-            print(f"下载 Cora 数据集（约 2MB）: {url}")
-            _urldownload(url, tgz_path)
-            last_err = None
-            break
-        except Exception as e:
-            print(f"  → 失败（{type(e).__name__}: {e}），尝试下一地址...")
-            last_err = e
-
-    if last_err is not None:
-        raise RuntimeError(
-            "Cora 数据集下载失败。请手动下载：\n"
-            "  1. 浏览器访问 http://linqs-data.scu.edu/public/datasets/cora/cora.tgz\n"
-            "  2. 解压后将 cora/ 文件夹放置到 GCN/data/cora/\n"
-            "  3. 确保 GCN/data/cora/cora.content 和 GCN/data/cora/cora.cites 存在"
-        ) from last_err
-
-    print("解压数据集...")
-    with tarfile.open(tgz_path, "r:gz") as f:
-        f.extractall(data_dir)
-    os.remove(tgz_path)
-    print("Cora 数据集准备完成\n")
+    if not os.path.exists(content_path) or not os.path.exists(cites_path):
+        raise FileNotFoundError(_MANUAL_DOWNLOAD_MSG)
 
     return content_path, cites_path
 
@@ -265,7 +208,7 @@ def load_cora(data_dir: str) -> dict:
         print(f"Cora 数据集已从缓存加载（{data['n_nodes']} 节点，{data['n_edges']} 边）")
         return data
 
-    content_path, cites_path = _download_cora(data_dir)
+    content_path, cites_path = _check_cora_files(data_dir)
     print("解析 Cora 数据集...")
     data = _parse_cora(content_path, cites_path)
     torch.save(data, cache_path)
