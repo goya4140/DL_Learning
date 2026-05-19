@@ -22,6 +22,10 @@
 | Gradient Clipping（梯度裁剪） | 正则化 | RNN 训练中的梯度爆炸 | RNN | [regularization/gradient_clipping.md](regularization/gradient_clipping.md) |
 | LSTM 门控机制 | RNN/LSTM | 梯度消失（长序列依赖无法学习） | LSTM | [rnn_lstm/gating_mechanism.md](rnn_lstm/gating_mechanism.md) |
 | 消息传递（MPNN） | 图神经网络 | 图结构数据无法用标准 CNN/RNN 处理 | GCN | [graph_nn/message_passing.md](graph_nn/message_passing.md) |
+| Attention 机制（Self-Attention / MHA） | Attention | RNN 串行瓶颈、长程依赖消失 | Transformer | [attention/self_attention.md](attention/self_attention.md) |
+| Layer Normalization | 归一化 | 变长序列 BatchNorm 统计量不稳定 | Transformer | [attention/self_attention.md](attention/self_attention.md) |
+| Residual Connection（残差连接） | 训练稳定性 | 深层网络梯度消失、退化 | Transformer | [attention/self_attention.md](attention/self_attention.md) |
+| 位置编码（Sinusoidal / 可学习） | Attention | Self-Attention 无位置感知 | Transformer | [attention/self_attention.md](attention/self_attention.md) |
 
 ---
 
@@ -46,8 +50,10 @@ DL_Basics/
 │   └── pooling.md                   # MaxPool、AvgPool、Global Average Pooling
 ├── rnn_lstm/
 │   └── gating_mechanism.md          # LSTM/GRU 门控原理、梯度分析、与 Attention 的关系
-└── graph_nn/
-    └── message_passing.md           # MPNN 框架、GCN/GAT/GraphSAGE 对比、过平滑问题
+├── graph_nn/
+│   └── message_passing.md           # MPNN 框架、GCN/GAT/GraphSAGE 对比、过平滑问题
+└── attention/
+    └── self_attention.md            # Self-Attention、MHA、位置编码、LayerNorm、残差连接
 ```
 
 ---
@@ -64,7 +70,8 @@ DL_Basics/
 | Gradient Clipping（梯度裁剪） | RNN/LSTM | ✅ 已完成 |
 | LSTM 门控机制 / GRU | LSTM | ✅ 已完成 |
 | 消息传递框架（MPNN）/ 过平滑 | GCN | ✅ 已完成 |
-| Layer Normalization | Transformer | 待更新 |
+| Attention Mechanism / Self-Attention | Transformer | ✅ 已完成 |
+| Layer Normalization | Transformer | ✅ 已完成 |
+| Residual Connection（残差连接） | Transformer | ✅ 已完成 |
+| 位置编码（Sinusoidal）| Transformer | ✅ 已完成 |
 | Weight Initialization（权重初始化） | CNN/ResNet | 待更新 |
-| Residual Connection（残差连接） | ResNet/Transformer | 待更新 |
-| Attention Mechanism | Transformer | 待更新 |
