@@ -26,3 +26,6 @@ matplotlib>=3.7.0,<4.0
 
 # torchtext 加载 AG_NEWS 数据集的必要依赖（部分环境未自动安装）
 portalocker>=2.0.0
+
+# GCN 项目：图数据集加载（仅用 Planetoid/Cora，无需 torch-scatter/torch-sparse）
+torch_geometric>=2.4.0
